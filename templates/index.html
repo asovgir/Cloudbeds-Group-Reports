@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Group Allotment Report</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: white;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .export-button {
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 2px 5px rgba(46, 204, 113, 0.3);
+    }
+
+    .export-button:hover {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.4);
+    }
+
+    .settings-button {
+      background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .settings-button:hover {
+      background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+    }
+
+    .controls {
+      margin-bottom: 30px;
+      padding: 25px;
+      border: 1px solid #ddd;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 200px 200px auto;
+      gap: 30px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: block;
+      color: #34495e;
+    }
+
+    input[type="date"], input[type="text"], select {
+      padding: 12px 15px;
+      border: 2px solid #bdc3c7;
+      border-radius: 5px;
+      width: 100%;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+
+    input[type="date"]:focus, input[type="text"]:focus, select:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+
+    button {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 5px;
+      transition: all 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .clear-button {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      margin-left: 10px;
+    }
+
+    .clear-button:hover {
+      background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #7f8c8d;
+    }
+
+    .error {
+      background: #fdd5d5;
+      color: #e74c3c;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border: 1px solid #e74c3c;
+    }
+
+    .summary {
+      background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      border: 1px solid #bee5eb;
+    }
+
+    .summary h2 {
+      margin: 0 0 15px 0;
+      color: #2c3e50;
+      font-size: 20px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .stat-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #7f8c8d;
+      text-transform: uppercase;
+    }
+
+    .groups-container {
+      margin-top: 30px;
+    }
+
+    .group-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .group-header {
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+      padding: 15px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .group-header:hover {
+      background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    }
+
+    .group-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .group-stats {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .group-content {
+      display: none;
+      padding: 20px;
+    }
+
+    .group-content.active {
+      display: block;
+    }
+
+    .allotment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .allotment-table th,
+    .allotment-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .allotment-table th {
+      background: #f8f9fa;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .allotment-table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .pickup-bar {
+      width: 100px;
+      height: 20px;
+      background: #ecf0f1;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pickup-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      border-radius: 10px;
+      transition: width 0.3s;
+    }
+
+    .pickup-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .currency {
+      font-weight: bold;
+      color: #27ae60;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .date-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      
+      .summary-stats {
+        grid-template-columns: 1fr;
+      }
+      
+      .group-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>
+    <span>🏨 Group Allotment Report</span>
+    <div class="header-buttons">
+      <button class="export-button" onclick="exportReport()" style="display:none;" id="exportBtn">
+        <span class="export-icon">📊</span>
+        Export CSV
+      </button>
+      <a href="/settings" class="settings-button">
+        ⚙️ Settings
+      </a>
+    </div>
+  </h1>
+
+  <div class="controls">
+    <div class="date-row">
+      <div>
+        <label for="startDate">Start Date</label>
+        <input type="date" id="startDate" value="">
+      </div>
+      <div>
+        <label for="endDate">End Date</label>
+        <input type="date" id="endDate" value="">
+      </div>
+      <div>
+        <button onclick="generateReport()">Generate Report</button>
+        <button class="clear-button" onclick="clearReport()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="loading" style="display:none;">
+    🔄 Loading group allotment data...
+  </div>
+
+  <div id="error" class="error" style="display:none;"></div>
+
+  <div id="summary" class="summary" style="display:none;">
+    <h2>📊 Report Summary</h2>
+    <div class="summary-stats">
+      <div class="stat-item">
+        <div class="stat-value" id="totalGroups">-</div>
+        <div class="stat-label">Total Groups</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalBlocks">-</div>
+        <div class="stat-label">Allotment Blocks</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalRevenue">-</div>
+        <div class="stat-label">Forecasted Revenue</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="dateRange">-</div>
+        <div class="stat-label">Date Range</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="results" class="groups-container"></div>
+
+  <script>
+    // Set default dates
+    const today = new Date();
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+    
+    document.getElementById('startDate').value = today.toISOString().split('T')[0];
+    document.getElementById('endDate').value = nextMonth.toISOString().split('T')[0];
+
+    function generateReport() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      
+      if (!startDate || !endDate) {
+        showError('Please select both start and end dates.');
+        return;
+      }
+      
+      if (new Date(startDate) > new Date(endDate)) {
+        showError('Start date must be before end date.');
+        return;
+      }
+      
+      showLoading();
+      hideError();
+      hideResults();
+      
+      fetch(`/api/group-allotment-report?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(data => {
+          hideLoading();
+          if (data.success) {
+            displayReport(data.data);
+          } else {
+            showError('Error generating report: ' + data.error);
+          }
+        })
+        .catch(error => {
+          hideLoading();
+          showError('Network error: ' + error.message);
+        });
+    }
+
+    function displayReport(data) {
+      displaySummary(data);
+      displayGroups(data.groups);
+      document.getElementById('exportBtn').style.display = 'flex';
+    }
+
+    function displaySummary(data) {
+      document.getElementById('totalGroups').textContent = data.summary.total_groups;
+      document.getElementById('totalBlocks').textContent = data.summary.total_allotment_blocks;
+      document.getElementById('totalRevenue').textContent = '$' + data.summary.total_forecasted_revenue.toLocaleString();
+      document.getElementById('dateRange').textContent = `${data.date_range.start_date} to ${data.date_range.end_date}`;
+      
+      document.getElementById('summary').style.display = 'block';
+    }
+
+    function displayGroups(groups) {
+      const container = document.getElementById('results');
+      
+      if (!groups || groups.length === 0) {
+        container.innerHTML = '<div class="no-data">No group allotment data found for the selected date range.</div>';
+        return;
+      }
+      
+      let html = '';
+      
+      groups.forEach((group, index) => {
+        html += `
+          <div class="group-card">
+            <div class="group-header" onclick="toggleGroup(${index})">
+              <div class="group-title">
+                ${group.name} (${group.code})
+              </div>
+              <div class="group-stats">
+                ${group.total_blocks} blocks • $${group.total_forecasted_revenue.toLocaleString()} revenue
+              </div>
+            </div>
+            <div class="group-content" id="group-${index}">
+              ${generateAllotmentTable(group.allotment_blocks)}
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+
+    function generateAllotmentTable(blocks) {
+      if (!blocks || blocks.length === 0) {
+        return '<div class="no-data">No allotment blocks found.</div>';
+      }
+      
+      let html = `
+        <table class="allotment-table">
+          <thead>
+            <tr>
+              <th>Block Name</th>
+              <th>Block Code</th>
+              <th>Status</th>
+              <th>Dates</th>
+              <th>Pickup %</th>
+              <th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      blocks.forEach(block => {
+        const avgPickup = calculateAveragePickup(block.dates_data);
+        
+        html += `
+          <tr>
+            <td>${block.name}</td>
+            <td>${block.code || '-'}</td>
+            <td>${block.status || '-'}</td>
+            <td>${block.dates_data.length} dates</td>
+            <td>
+              <div class="pickup-bar">
+                <div class="pickup-fill" style="width: ${avgPickup}%"></div>
+                <div class="pickup-text">${avgPickup}%</div>
+              </div>
+            </td>
+            <td class="currency">$${block.forecasted_revenue.toLocaleString()}</td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function calculateAveragePickup(datesData) {
+      if (!datesData || datesData.length === 0) return 0;
+      
+      let totalPickup = 0;
+      let count = 0;
+      
+      datesData.forEach(date => {
+        date.room_types.forEach(room => {
+          totalPickup += room.pickup_percentage || 0;
+          count++;
+        });
+      });
+      
+      return count > 0 ? Math.round(totalPickup / count) : 0;
+    }
+
+    function toggleGroup(index) {
+      const content = document.getElementById(`group-${index}`);
+      content.classList.toggle('active');
+    }
+
+    function clearReport() {
+      hideResults();
+      hideError();
+      document.getElementById('summary').style.display = 'none';
+      document.getElementById('exportBtn').style.display = 'none';
+    }
+
+    function exportReport() {
+      // Simple CSV export functionality
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      
+      if (!startDate || !endDate) {
+        alert('Please generate a report first.');
+        return;
+      }
+      
+      // You can implement CSV export here
+      alert('Export functionality can be implemented based on your needs.');
+    }
+
+    function showLoading() {
+      document.getElementById('loading').style.display = 'block';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+
+    function hideResults() {
+      document.getElementById('results').innerHTML = '';
+    }
+
+    // Auto-generate report on page load if dates are set
+    window.addEventListener('load', function() {
+      // Uncomment this if you want to auto-generate on load
+      // generateReport();
+    });
+  </script>
+</body>
+</html>

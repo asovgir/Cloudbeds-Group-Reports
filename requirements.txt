@@ -1,0 +1,10 @@
+# Core application dependencies
+Flask>=2.3.0
+requests>=2.25.0
+PyYAML>=5.4.0
+
+# Build dependencies - use latest for Python 3.12+ compatibility
+pyinstaller>=6.0
+
+# Windows support
+pywin32>=300; sys_platform == "win32"

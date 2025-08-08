@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Settings</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #667eea; }
+        .container { background: white; padding: 40px; border-radius: 20px; max-width: 500px; margin: 0 auto; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #bdc3c7; border-radius: 8px; box-sizing: border-box; }
+        button { padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; }
+        .save { background: #3498db; color: white; }
+        .test { background: #27ae60; color: white; width: 100%; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 API Settings</h1>
+        <form method="post" action="/settings">
+            <label>API Key:</label>
+            <input type="password" name="api_key" value="{{ config.get('api_key', '') }}" required>
+            
+            <label>Property ID:</label>
+            <input type="text" name="property_id" value="{{ config.get('property_id', '6000') }}">
+            
+            <button type="submit" class="save">Save Settings</button>
+        </form>
+        
+        <button onclick="testConnection()" class="test">Test Connection</button>
+        <div id="status"></div>
+    </div>
+    
+    <script>
+        function testConnection() {
+            // Simple test function
+            fetch('/api/test-connection').then(r => r.json()).then(data => {
+                document.getElementById('status').innerHTML = data.success ? '✅ Success' : '❌ ' + data.error;
+            });
+        }
+    </script>
+</body>
+</html>

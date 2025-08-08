@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cloudbeds API Settings</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #34495e;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #bdc3c7;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #7f8c8d;
+      margin-top: 5px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+    }
+
+    .btn-test {
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      color: white;
+      margin-top: 15px;
+      width: 100%;
+    }
+
+    .btn-test:hover {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    }
+
+    .status-message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .status-success {
+      background: #d5fdd5;
+      color: #27ae60;
+      border: 1px solid #2ecc71;
+    }
+
+    .status-error {
+      background: #fdd5d5;
+      color: #e74c3c;
+      border: 1px solid #e74c3c;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- DEBUG: NEW SETTINGS FILE - API KEY ONLY -->
+  <div class="settings-container">
+    <div class="logo">🔑</div>
+    <h1>Cloudbeds API Settings</h1>
+    <p class="subtitle">Configure your API credentials</p>
+    
+    <form method="post" action="/settings">
+      <div class="form-group">
+        <label for="api_key">API Key</label>
+        <input type="password" id="api_key" name="api_key" value="{{ config.get('api_key', '') }}" required>
+        <div class="help-text">Your Cloudbeds API key (starts with "cbat_")</div>
+      </div>
+
+      <div class="form-group">
+        <label for="property_id">Property ID</label>
+        <input type="text" id="property_id" name="property_id" value="{{ config.get('property_id', '6000') }}">
+        <div class="help-text">Your property ID (usually a number like 6000)</div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn-secondary" onclick="goToApp()">Cancel</button>
+        <button type="submit" class="btn-primary">Save Settings</button>
+      </div>
+    </form>
+
+    <button type="button" class="btn-test" onclick="testConnection()">Test API Connection</button>
+    
+    <div id="statusMessage"></div>
+  </div>
+
+  <script>
+    function testConnection() {
+      const button = document.querySelector('.btn-test');
+      const statusDiv = document.getElementById('statusMessage');
+      
+      button.textContent = 'Testing...';
+      button.disabled = true;
+      
+      const apiKey = document.getElementById('api_key').value;
+      const propertyId = document.getElementById('property_id').value;
+      
+      if (!apiKey) {
+        showStatus('Please fill in your API Key first.', 'error');
+        button.textContent = 'Test API Connection';
+        button.disabled = false;
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('api_key', apiKey);
+      formData.append('property_id', propertyId);
+      
+      fetch('/settings', {
+        method: 'POST',
+        body: formData
+      })
+      .then(() => {
+        return fetch('/api/test-connection');
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showStatus(result.message, 'success');
+        } else {
+          showStatus(result.error, 'error');
+        }
+      })
+      .catch(error => {
+        showStatus('Connection test failed: ' + error.message, 'error');
+      })
+      .finally(() => {
+        button.textContent = 'Test API Connection';
+        button.disabled = false;
+      });
+    }
+    
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+    }
+    
+    function goToApp() {
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>
