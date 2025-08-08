@@ -1,148 +1,108 @@
 # Cloudbeds Allotment Report
 
-A Flask web application for generating group allotment reports from the Cloudbeds API.
+A desktop application for generating group allotment reports from the Cloudbeds API.
 
-## 🔄 Recent Changes
+## 🚀 Quick Start for Users
 
-**Switched from OAuth to API Key Authentication**
-- Simplified authentication using only API keys
-- Removed access token requirements
-- Better suited for server deployment
+### Download and Run
+1. **Download** `CloudbedsReport.exe` 
+2. **Double-click** to run the application
+3. **Enter your API credentials** when prompted:
+   - API Key (starts with "cbat_")
+   - Cloudbeds Property ID
+4. **Generate reports** using the dashboard
 
-## 🚀 Quick Start
+That's it! No installation or technical setup required.
 
-### Local Development
+## 🔑 Getting Your API Key 
+Instructions on [how to find your API credentials](https://developers.cloudbeds.com/docs/quickstart-guide-api-authentication-for-property-level-users)
 
-1. **Clone and setup**:
-   ```bash
-   git clone <your-repo>
-   cd cloudbeds-report
-   pip install -r requirements.txt
-   ```
 
-2. **Configure API credentials**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Cloudbeds API key
-   ```
+## 📊 Using the Application
 
-3. **Run locally**:
-   ```bash
-   python main.py
-   ```
-   - Opens automatically at http://localhost:5000
-   - Use the settings page to configure API credentials
+### First Time Setup
+- The app will open your web browser automatically
+- Enter your API key and Property ID in the settings
+- Click "Test API Connection" to verify
+- Click "Save Settings"
 
-### Production Deployment
+### Generating Reports
+- Select your desired date range
+- Click "Generate Report"
+- View group allotment data organized by groups
+- Click on group headers to expand details
+- Export data as needed
 
-#### Option 1: Environment Variables (Recommended)
+## 💡 Features
 
-Set these environment variables on your hosting platform:
+- **Simple Setup** - Just API key and Property ID required
+- **Local Data** - All settings saved locally on your computer
+- **Real-time Data** - Connects directly to Cloudbeds API
+- **Group Organization** - Reports organized by reservation groups
+- **Pickup Tracking** - Visual pickup percentage indicators
+- **Revenue Forecasting** - Total forecasted revenue calculations
+- **Export Ready** - Data can be exported for further analysis
 
+## 🔧 System Requirements
+
+- **Windows 7 or later**
+- **Internet connection** (for API calls to Cloudbeds)
+- **Modern web browser** (Chrome, Firefox, Edge, Safari)
+
+## 🛠️ Troubleshooting
+
+### API Connection Issues
+- Verify your API key is correct (starts with "cbat_")
+- Check your Property ID matches your Cloudbeds account
+- Ensure your API key has proper permissions for allotment data
+- Confirm internet connection is working
+
+### Application Issues
+- **Antivirus blocking**: Some antivirus software may flag the .exe - add it to exceptions
+- **Windows SmartScreen**: Click "More info" → "Run anyway" if prompted
+- **Port already in use**: Close other applications that might use port 5000
+
+### No Data Showing
+- Check your date range includes periods with group bookings
+- Verify your property has the Groups module enabled in Cloudbeds
+- Ensure allotment blocks exist for the selected date range
+
+## 📞 Support
+
+For technical support or questions about the application, please contact [Your Support Information].
+
+For Cloudbeds API questions, visit the [Cloudbeds Developer Documentation](https://developers.cloudbeds.com/).
+
+---
+
+## 🔨 For Developers
+
+If you want to modify or build the application yourself:
+
+### Development Setup
 ```bash
-CLOUDBEDS_API_KEY=cbat_your_actual_api_key
-CLOUDBEDS_PROPERTY_ID=6000
-SECRET_KEY=your-secure-random-secret-key
-PORT=5000
-FLASK_ENV=production
+git clone [repository]
+cd cloudbeds-report
+python -m venv venv
+source venv/Scripts/activate  # Windows Git Bash
+pip install -r requirements.txt
+python main.py
 ```
 
-#### Option 2: Using .env file
-
-1. Create a `.env` file (copy from `.env.example`)
-2. Fill in your actual API credentials
-3. Deploy the application
-
-## 🔑 Getting Your API Key
-
-1. Log in to your Cloudbeds account
-2. Go to **Apps & Marketplace** → **API Credentials**
-3. Find your API Key (starts with `cbat_`)
-4. Note your Property ID (usually a number like 6000)
-
-## 🌐 Deployment Platforms
-
-### Heroku
+### Building the Executable
 ```bash
-# Set environment variables
-heroku config:set CLOUDBEDS_API_KEY=cbat_your_key
-heroku config:set CLOUDBEDS_PROPERTY_ID=6000
-heroku config:set SECRET_KEY=your-secret-key
-
-# Deploy
-git push heroku main
+python build_exe.py
 ```
 
-### Railway
-```bash
-# Set environment variables in Railway dashboard
-CLOUDBEDS_API_KEY=cbat_your_key
-CLOUDBEDS_PROPERTY_ID=6000
-SECRET_KEY=your-secret-key
-```
+The .exe will be created in the `dist/` folder.
 
-### Render/DigitalOcean/AWS
-Set the environment variables in your platform's dashboard.
-
-## 📁 Project Structure
-
+### Project Structure
 ```
 ├── main.py                 # Main Flask application
 ├── templates/
-│   ├── index.html         # Main dashboard
-│   └── settings.html      # API configuration (dev only)
+│   ├── index.html         # Dashboard interface
+│   └── api_settings.html  # API configuration
+├── build_exe.py           # Build script for .exe
 ├── requirements.txt       # Python dependencies
-├── .env.example          # Environment template
-├── .gitignore           # Git ignore file
-└── README.md           # This file
+└── .gitignore            # Git ignore file
 ```
-
-## 🔒 Security Features
-
-- **No hardcoded credentials** - All sensitive data in environment variables
-- **Production mode** - Settings page disabled when using environment variables
-- **Secure defaults** - Proper Flask security configuration
-- **HTTPS ready** - Works with SSL/TLS termination
-
-## 🛠️ Development vs Production
-
-### Development Mode
-- Uses local `.cloudbeds_report_config.yml` file
-- Settings page available at `/settings`
-- Debug mode enabled
-- Auto-opens browser
-
-### Production Mode (when `CLOUDBEDS_API_KEY` env var is set)
-- Uses environment variables only
-- Settings page redirects to main app
-- Debug mode disabled
-- Binds to `0.0.0.0` for container deployment
-
-## 📊 API Endpoints
-
-- `GET /` - Main dashboard
-- `GET /settings` - API configuration (development only)
-- `GET /api/test-connection` - Test API connectivity
-- `GET /api/group-allotment-report` - Generate reports
-- `GET /api/reservations` - Get reservation details
-
-## 🐛 Troubleshooting
-
-### API Key Issues
-- Ensure your API key starts with `cbat_`
-- Check that the key has proper permissions in Cloudbeds
-- Verify your Property ID is correct
-
-### Deployment Issues
-- Check that all required environment variables are set
-- Ensure your hosting platform supports Python 3.8+
-- Check the application logs for specific error messages
-
-### Local Development
-- Use `python main.py` for local development
-- Check that `requirements.txt` dependencies are installed
-- Ensure port 5000 is available
-
-## 📝 License
-
-[Your License Here]
