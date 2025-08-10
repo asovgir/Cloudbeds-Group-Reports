@@ -2,7 +2,6 @@
 
 import os
 import json
-import yaml
 import requests
 import webbrowser
 import threading
@@ -12,28 +11,40 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 
-# Flask app configuration
-app = Flask(__name__)
+# Handle PyInstaller bundle paths
+if getattr(sys, 'frozen', False):
+    # Running as compiled executable
+    application_path = sys._MEIPASS
+else:
+    # Running as script
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+# Set up paths for templates and static files
+template_dir = os.path.join(application_path, 'templates')
+static_dir = os.path.join(application_path, 'static')
+
+# Flask app configuration with correct paths
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 app.config['SECRET_KEY'] = 'cloudbeds-report-desktop-app-secret'
 
-# Configuration file handling
-CONFIG_FILE = Path.home() / '.cloudbeds_report_config.yml'
+# Configuration file handling (using JSON instead of YAML)
+CONFIG_FILE = Path.home() / '.cloudbeds_report_config.json'
 
 def load_config():
-    """Load configuration from YAML file"""
+    """Load configuration from JSON file"""
     try:
         if CONFIG_FILE.exists():
             with open(CONFIG_FILE, 'r') as f:
-                return yaml.safe_load(f) or {}
+                return json.load(f) or {}
     except Exception as e:
         print(f"Warning: Could not load configuration: {e}")
     return {}
 
 def save_config(config):
-    """Save configuration to YAML file"""
+    """Save configuration to JSON file"""
     try:
         with open(CONFIG_FILE, 'w') as f:
-            yaml.dump(config, f)
+            json.dump(config, f, indent=2)
         print(f"✅ Configuration saved to: {CONFIG_FILE}")
     except Exception as e:
         print(f"Warning: Could not save configuration: {e}")
@@ -226,7 +237,7 @@ def settings():
     """Settings page for API credentials"""
     config = load_config()
     first_time = request.args.get('first_time', False)
-    return render_template('settings.html', config=config, first_time=first_time)
+    return render_template('api_settings.html', config=config, first_time=first_time)
 
 @app.route('/settings', methods=['POST'])
 def save_settings():
@@ -385,6 +396,12 @@ def find_free_port():
 if __name__ == '__main__':
     print("\n🏨 Cloudbeds Allotment Report - Desktop App")
     print("=" * 50)
+    
+    # Debug: Print paths when running as executable
+    if getattr(sys, 'frozen', False):
+        print(f"📁 Template directory: {template_dir}")
+        print(f"📁 Static directory: {static_dir}")
+        print(f"📁 Application path: {application_path}")
     
     # Find an available port
     port = find_free_port()
