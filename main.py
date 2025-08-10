@@ -16,9 +16,6 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cloudbeds-report-desktop-app-secret'
 
-app.config['TEMPLATES_AUTO_RELOAD'] = True
-app.jinja_env.auto_reload = True
-
 # Configuration file handling
 CONFIG_FILE = Path.home() / '.cloudbeds_report_config.yml'
 
@@ -45,7 +42,7 @@ def get_credentials():
     """Get API credentials from config"""
     config = load_config()
     return {
-        'api_key': config.get('api_key'),          # ✅ Should be this
+        'api_key': config.get('api_key'),
         'property_id': config.get('property_id', '6000')
     }
 
@@ -58,7 +55,8 @@ def make_api_call(url, params, credentials):
     """Make API call to Cloudbeds using API Key authentication"""
     headers = {
         "x-api-key": credentials['api_key'],
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Content-Type": "application/json"
     }
     
     try:
@@ -78,51 +76,77 @@ def make_api_call(url, params, credentials):
 
 def process_allotment_block(block):
     """Process a single allotment block"""
-    print(f"Processing allotment block: {block.get('allotmentBlockId')} - {block.get('allotmentBlockName')}")
-    
-    block_data = {
-        'id': block.get('allotmentBlockId'),
-        'code': block.get('allotmentBlockCode'),
-        'name': block.get('allotmentBlockName', 'Unknown Allotment'),
-        'status': block.get('allotmentBlockStatus'),
-        'dates_data': [],
-        'forecasted_revenue': 0
-    }
-    
-    if block.get('allotmentIntervals') and isinstance(block['allotmentIntervals'], list):
+    try:
+        print(f"Processing allotment block: {block.get('allotmentBlockId')} - {block.get('allotmentBlockName')}")
+        
+        block_data = {
+            'id': block.get('allotmentBlockId'),
+            'code': block.get('allotmentBlockCode'),
+            'name': block.get('allotmentBlockName', 'Unknown Allotment'),
+            'status': block.get('allotmentBlockStatus'),
+            'dates_data': [],
+            'forecasted_revenue': 0
+        }
+        
+        # Safely handle allotmentIntervals
+        allotment_intervals = block.get('allotmentIntervals')
+        if not allotment_intervals or not isinstance(allotment_intervals, list):
+            print(f"  No allotment intervals found for block {block_data['id']}")
+            return block_data
+        
         dates_rooms = {}
         
-        for interval in block['allotmentIntervals']:
-            if isinstance(interval, dict):
-                for room_type_id, room_data in interval.items():
-                    if room_data and room_data.get('availability'):
-                        for date, date_data in room_data['availability'].items():
-                            if date_data and date_data.get('blockAllotted'):
-                                if date not in dates_rooms:
-                                    dates_rooms[date] = []
-                                
-                                block_allotted = int(date_data.get('blockAllotted', 0))
-                                block_remaining = int(date_data.get('blockRemaining', 0))
-                                
-                                if date_data.get('blockConfirmed') is not None:
-                                    block_confirmed = int(date_data['blockConfirmed'])
-                                else:
-                                    block_confirmed = block_allotted - block_remaining
-                                
-                                pickup_percentage = round((block_confirmed / block_allotted * 100), 1) if block_allotted > 0 else 0
-                                
-                                rate = float(date_data.get('rate', 0))
-                                room_revenue = block_allotted * rate
-                                block_data['forecasted_revenue'] += room_revenue
-                                
-                                dates_rooms[date].append({
-                                    'room_type_id': room_type_id,
-                                    'block_allotted': block_allotted,
-                                    'block_confirmed': block_confirmed,
-                                    'block_remaining': block_remaining,
-                                    'pickup_percentage': pickup_percentage,
-                                    'rate': rate
-                                })
+        for interval in allotment_intervals:
+            if not isinstance(interval, dict):
+                print(f"  Skipping invalid interval: {type(interval)}")
+                continue
+                
+            for room_type_id, room_data in interval.items():
+                if not room_data or not isinstance(room_data, dict):
+                    continue
+                    
+                availability = room_data.get('availability')
+                if not availability or not isinstance(availability, dict):
+                    continue
+                    
+                for date, date_data in availability.items():
+                    if not date_data or not isinstance(date_data, dict):
+                        continue
+                        
+                    block_allotted = date_data.get('blockAllotted')
+                    if not block_allotted:
+                        continue
+                        
+                    try:
+                        block_allotted = int(block_allotted)
+                        block_remaining = int(date_data.get('blockRemaining', 0))
+                        
+                        if date_data.get('blockConfirmed') is not None:
+                            block_confirmed = int(date_data['blockConfirmed'])
+                        else:
+                            block_confirmed = block_allotted - block_remaining
+                        
+                        pickup_percentage = round((block_confirmed / block_allotted * 100), 1) if block_allotted > 0 else 0
+                        
+                        rate = float(date_data.get('rate', 0))
+                        room_revenue = block_allotted * rate
+                        block_data['forecasted_revenue'] += room_revenue
+                        
+                        if date not in dates_rooms:
+                            dates_rooms[date] = []
+                        
+                        dates_rooms[date].append({
+                            'room_type_id': room_type_id,
+                            'block_allotted': block_allotted,
+                            'block_confirmed': block_confirmed,
+                            'block_remaining': block_remaining,
+                            'pickup_percentage': pickup_percentage,
+                            'rate': rate
+                        })
+                        
+                    except (ValueError, TypeError) as e:
+                        print(f"  Error processing date {date} for room {room_type_id}: {e}")
+                        continue
         
         # Sort dates and create final data structure
         for date in sorted(dates_rooms.keys()):
@@ -130,9 +154,21 @@ def process_allotment_block(block):
                 'date': date,
                 'room_types': sorted(dates_rooms[date], key=lambda x: x['room_type_id'])
             })
-    
-    print(f"  Processed {len(block_data['dates_data'])} dates")
-    return block_data
+        
+        print(f"  Processed {len(block_data['dates_data'])} dates")
+        return block_data
+        
+    except Exception as e:
+        print(f"ERROR processing allotment block {block.get('allotmentBlockId', 'unknown')}: {e}")
+        # Return a minimal block structure to prevent complete failure
+        return {
+            'id': block.get('allotmentBlockId', 'unknown'),
+            'code': block.get('allotmentBlockCode', 'unknown'),
+            'name': block.get('allotmentBlockName', 'Unknown Allotment'),
+            'status': block.get('allotmentBlockStatus', 'unknown'),
+            'dates_data': [],
+            'forecasted_revenue': 0
+        }
 
 def generate_group_allotment_report(allotment_blocks, start_date, end_date):
     """Generate the complete report data structure"""
@@ -187,9 +223,10 @@ def index():
 
 @app.route('/settings')
 def settings():
+    """Settings page for API credentials"""
     config = load_config()
     first_time = request.args.get('first_time', False)
-    return render_template('api_settings.html', config=config, first_time=first_time)
+    return render_template('settings.html', config=config, first_time=first_time)
 
 @app.route('/settings', methods=['POST'])
 def save_settings():

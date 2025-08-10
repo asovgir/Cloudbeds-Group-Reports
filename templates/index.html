@@ -3,389 +3,216 @@
 <head>
   <title>Group Allotment Report</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: white;
-      color: #333;
-      line-height: 1.6;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
-      color: #2c3e50;
-      border-bottom: 3px solid #3498db;
-      padding-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .export-button {
-      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-      color: white;
-      border: none;
-      padding: 12px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s;
-      box-shadow: 0 2px 5px rgba(46, 204, 113, 0.3);
-    }
-
-    .export-button:hover {
-      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.4);
-    }
-
-    .settings-button {
-      background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .settings-button:hover {
-      background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
-    }
-
-    .controls {
-      margin-bottom: 30px;
-      padding: 25px;
-      border: 1px solid #ddd;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .date-row {
-      display: grid;
-      grid-template-columns: 200px 200px auto;
-      gap: 30px;
-      align-items: end;
-      margin-bottom: 20px;
-    }
-
-    label {
-      font-weight: bold;
-      margin-bottom: 8px;
-      display: block;
-      color: #34495e;
-    }
-
-    input[type="date"], input[type="text"], select {
-      padding: 12px 15px;
-      border: 2px solid #bdc3c7;
-      border-radius: 5px;
-      width: 100%;
-      font-size: 14px;
-      transition: border-color 0.3s;
-      box-sizing: border-box;
-    }
-
-    input[type="date"]:focus, input[type="text"]:focus, select:focus {
-      border-color: #3498db;
-      outline: none;
-    }
-
-    button {
-      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      border-radius: 5px;
-      transition: all 0.3s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    button:hover {
-      background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    .clear-button {
-      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-      margin-left: 10px;
-    }
-
-    .clear-button:hover {
-      background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      font-size: 18px;
-      color: #7f8c8d;
-    }
-
-    .error {
-      background: #fdd5d5;
-      color: #e74c3c;
-      padding: 15px;
-      border-radius: 8px;
-      margin: 20px 0;
-      border: 1px solid #e74c3c;
-    }
-
-    .summary {
-      background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 30px;
-      border: 1px solid #bee5eb;
-    }
-
-    .summary h2 {
-      margin: 0 0 15px 0;
-      color: #2c3e50;
-      font-size: 20px;
-    }
-
-    .summary-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-    }
-
-    .stat-item {
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .stat-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #2c3e50;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: #7f8c8d;
-      text-transform: uppercase;
-    }
-
-    .groups-container {
-      margin-top: 30px;
-    }
-
-    .group-card {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      margin-bottom: 25px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-
-    .group-header {
-      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-      color: white;
-      padding: 15px 20px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .group-header:hover {
-      background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-    }
-
-    .group-title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .group-stats {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    .group-content {
-      display: none;
-      padding: 20px;
-    }
-
-    .group-content.active {
-      display: block;
-    }
-
-    .allotment-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-
-    .allotment-table th,
-    .allotment-table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .allotment-table th {
-      background: #f8f9fa;
-      font-weight: bold;
-      color: #2c3e50;
-    }
-
-    .allotment-table tr:hover {
-      background: #f8f9fa;
-    }
-
-    .pickup-bar {
-      width: 100px;
-      height: 20px;
-      background: #ecf0f1;
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .pickup-fill {
-      height: 100%;
-      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-      border-radius: 10px;
-      transition: width 0.3s;
-    }
-
-    .pickup-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 11px;
-      font-weight: bold;
-      color: #2c3e50;
-    }
-
-    .currency {
-      font-weight: bold;
-      color: #27ae60;
-    }
-
-    .no-data {
-      text-align: center;
-      padding: 40px;
-      color: #7f8c8d;
-      font-style: italic;
-    }
-
-    @media (max-width: 768px) {
-      .date-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-      
-      .summary-stats {
-        grid-template-columns: 1fr;
-      }
-      
-      .group-header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-      }
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2d3748; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { background: white; border-radius: 8px; padding: 20px 30px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #4299e1; }
+    .header h1 { font-size: 28px; font-weight: 600; color: #2d3748; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: #4299e1; color: white; }
+    .btn-secondary { background: #e2e8f0; color: #4a5568; }
+    .btn-success { background: #48bb78; color: white; }
+    .controls { background: white; border-radius: 8px; padding: 30px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .form-row { display: grid; grid-template-columns: 200px 200px 1fr; gap: 20px; margin-bottom: 25px; align-items: end; }
+    .filter-row { display: grid; grid-template-columns: 1fr 1fr 250px; gap: 20px; margin-bottom: 25px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label { font-size: 14px; font-weight: 500; color: #4a5568; margin-bottom: 8px; }
+    .form-control { padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; background: white; }
+    .form-control:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1); }
+    .dropdown { position: relative; }
+    .dropdown-toggle { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .dropdown-menu { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; margin-top: 4px; padding: 8px; display: none; }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+    .dropdown-item:hover { background: #f7fafc; }
+    .alert { padding: 16px; border-radius: 6px; margin-bottom: 20px; display: none; }
+    .alert.show { display: block; }
+    .alert-danger { background: #fed7d7; color: #c53030; border: 1px solid #feb2b2; }
+    .loading { text-align: center; padding: 40px; color: #718096; }
+    .summary { background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: none; }
+    .summary.show { display: block; }
+    .summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .stat-card { background: #f7fafc; padding: 20px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: #718096; text-transform: uppercase; }
+    .group-card { background: white; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+    .group-header { background: #2d3748; color: white; padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .group-header:hover { background: #4a5568; }
+    .group-content { display: none; padding: 20px; }
+    .group-content.show { display: block; }
+    .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .table th { background: #f7fafc; font-weight: 600; color: #4a5568; font-size: 13px; }
+    .pickup-bar { width: 100px; height: 20px; background: #e2e8f0; border-radius: 10px; overflow: hidden; position: relative; }
+    .pickup-fill { height: 100%; background: linear-gradient(90deg, #48bb78, #38a169); border-radius: 10px; }
+    .pickup-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: 600; color: #2d3748; }
+    .currency { font-weight: 600; color: #38a169; }
+    .detail-card { margin: 15px 0; border: 1px solid #e2e8f0; border-radius: 6px; }
+    .detail-header { background: #f7fafc; padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
+    .detail-table { font-size: 12px; }
+    .detail-table th { background: #e2e8f0; padding: 8px; border: 1px solid #cbd5e0; }
+    .detail-table td { padding: 8px; border: 1px solid #e2e8f0; }
+    
+    /* Modal Styles */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal-content { background-color: white; margin: 5% auto; padding: 0; border-radius: 8px; width: 95%; max-width: 1200px; max-height: 85vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .modal-header { background: #2d3748; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { margin: 0; font-size: 18px; }
+    .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+    .close { color: white; font-size: 28px; font-weight: bold; cursor: pointer; }
+    .close:hover { opacity: 0.7; }
   </style>
 </head>
-
 <body>
-  <h1>
-    <span>🏨 Group Allotment Report</span>
-    <div class="header-buttons">
-      <button class="export-button" onclick="exportReport()" style="display:none;" id="exportBtn">
-        <span class="export-icon">📊</span>
-        Export CSV
-      </button>
-      <a href="/settings" class="settings-button">
-        ⚙️ Settings
-      </a>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-hotel"></i> Group Allotment Report</h1>
+      <div>
+        <button class="btn btn-success" onclick="exportReport()" style="display:none;" id="exportBtn">
+          <i class="fas fa-download"></i> Export CSV
+        </button>
+        <a href="/settings" class="btn btn-secondary">
+          <i class="fas fa-cog"></i> Settings
+        </a>
+      </div>
     </div>
-  </h1>
 
-  <div class="controls">
-    <div class="date-row">
-      <div>
-        <label for="startDate">Start Date</label>
-        <input type="date" id="startDate" value="">
+    <div class="controls">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startDate">Start Date:</label>
+          <input type="date" id="startDate" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="endDate">End Date:</label>
+          <input type="date" id="endDate" class="form-control">
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+          <button class="btn btn-secondary" onclick="clearReport()">Clear</button>
+        </div>
       </div>
-      <div>
-        <label for="endDate">End Date</label>
-        <input type="date" id="endDate" value="">
+
+      <div class="filter-row">
+        <div class="form-group">
+          <label for="groupFilter">Group (Code/Name):</label>
+          <input type="text" id="groupFilter" class="form-control" placeholder="Search group...">
+        </div>
+        <div class="form-group">
+          <label for="blockFilter">Allotment Block (Code/Name):</label>
+          <input type="text" id="blockFilter" class="form-control" placeholder="Search block...">
+        </div>
+        <div class="form-group">
+          <label>Status:</label>
+          <div class="dropdown">
+            <div class="dropdown-toggle" onclick="toggleStatusDropdown()">
+              <span id="statusText">All Selected</span>
+              <span><i class="fas fa-chevron-down"></i></span>
+            </div>
+            <div class="dropdown-menu" id="statusDropdown">
+              <div class="dropdown-item" onclick="toggleSelectAll()">
+                <input type="checkbox" id="selectAll" checked> <strong>SELECT ALL</strong>
+              </div>
+              <hr style="margin: 4px 0; border: none; border-top: 1px solid #e2e8f0;">
+              <div class="dropdown-item">
+                <input type="checkbox" id="statusLead" value="Lead" checked onchange="updateStatusText()"> Lead
+              </div>
+              <div class="dropdown-item">
+                <input type="checkbox" id="statusTentative" value="Tentative" checked onchange="updateStatusText()"> Tentative
+              </div>
+              <div class="dropdown-item">
+                <input type="checkbox" id="statusDefinite" value="Definite" checked onchange="updateStatusText()"> Definite
+              </div>
+              <div class="dropdown-item">
+                <input type="checkbox" id="statusCancelled" value="Cancelled" onchange="updateStatusText()"> Cancelled
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <button onclick="generateReport()">Generate Report</button>
-        <button class="clear-button" onclick="clearReport()">Clear</button>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;">Loading...</div>
+    <div id="error" class="alert alert-danger"></div>
+
+    <div id="summary" class="summary">
+      <h2><i class="fas fa-chart-bar"></i> Report Summary</h2>
+      <div class="summary-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="totalGroups">-</div>
+          <div class="stat-label">Total Groups</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalBlocks">-</div>
+          <div class="stat-label">Allotment Blocks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalRevenue">-</div>
+          <div class="stat-label">Forecasted Revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="dateRange">-</div>
+          <div class="stat-label">Date Range</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <!-- Reservations Modal -->
+  <div id="reservationsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle"><i class="fas fa-bed"></i> Reservations</h3>
+        <span class="close" onclick="closeReservationsModal()">&times;</span>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Reservations content will be loaded here -->
       </div>
     </div>
   </div>
-
-  <div id="loading" class="loading" style="display:none;">
-    🔄 Loading group allotment data...
-  </div>
-
-  <div id="error" class="error" style="display:none;"></div>
-
-  <div id="summary" class="summary" style="display:none;">
-    <h2>📊 Report Summary</h2>
-    <div class="summary-stats">
-      <div class="stat-item">
-        <div class="stat-value" id="totalGroups">-</div>
-        <div class="stat-label">Total Groups</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="totalBlocks">-</div>
-        <div class="stat-label">Allotment Blocks</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="totalRevenue">-</div>
-        <div class="stat-label">Forecasted Revenue</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="dateRange">-</div>
-        <div class="stat-label">Date Range</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="results" class="groups-container"></div>
 
   <script>
     // Set default dates
     const today = new Date();
     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
-    
     document.getElementById('startDate').value = today.toISOString().split('T')[0];
     document.getElementById('endDate').value = nextMonth.toISOString().split('T')[0];
+
+    // Status dropdown
+    function toggleStatusDropdown() {
+      document.getElementById('statusDropdown').classList.toggle('show');
+    }
+
+    function toggleSelectAll() {
+      const selectAll = document.getElementById('selectAll');
+      ['statusLead', 'statusTentative', 'statusDefinite', 'statusCancelled'].forEach(id => {
+        document.getElementById(id).checked = selectAll.checked;
+      });
+      updateStatusText();
+    }
+
+    function updateStatusText() {
+      const checkedStatuses = ['statusLead', 'statusTentative', 'statusDefinite', 'statusCancelled']
+        .filter(id => document.getElementById(id).checked);
+      const selectAll = document.getElementById('selectAll');
+      selectAll.checked = checkedStatuses.length === 4;
+      
+      const statusText = document.getElementById('statusText');
+      if (checkedStatuses.length === 0) statusText.textContent = 'None Selected';
+      else if (checkedStatuses.length === 4) statusText.textContent = 'All Selected';
+      else statusText.textContent = `${checkedStatuses.length} Selected`;
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.dropdown')) {
+        document.getElementById('statusDropdown').classList.remove('show');
+      }
+    });
 
     function generateReport() {
       const startDate = document.getElementById('startDate').value;
@@ -396,14 +223,8 @@
         return;
       }
       
-      if (new Date(startDate) > new Date(endDate)) {
-        showError('Start date must be before end date.');
-        return;
-      }
-      
       showLoading();
       hideError();
-      hideResults();
       
       fetch(`/api/group-allotment-report?start_date=${startDate}&end_date=${endDate}`)
         .then(response => response.json())
@@ -412,7 +233,7 @@
           if (data.success) {
             displayReport(data.data);
           } else {
-            showError('Error generating report: ' + data.error);
+            showError('Error: ' + data.error);
           }
         })
         .catch(error => {
@@ -432,33 +253,28 @@
       document.getElementById('totalBlocks').textContent = data.summary.total_allotment_blocks;
       document.getElementById('totalRevenue').textContent = '$' + data.summary.total_forecasted_revenue.toLocaleString();
       document.getElementById('dateRange').textContent = `${data.date_range.start_date} to ${data.date_range.end_date}`;
-      
-      document.getElementById('summary').style.display = 'block';
+      document.getElementById('summary').classList.add('show');
     }
 
     function displayGroups(groups) {
       const container = document.getElementById('results');
       
       if (!groups || groups.length === 0) {
-        container.innerHTML = '<div class="no-data">No group allotment data found for the selected date range.</div>';
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">No data found.</div>';
         return;
       }
       
       let html = '';
-      
       groups.forEach((group, index) => {
         html += `
           <div class="group-card">
             <div class="group-header" onclick="toggleGroup(${index})">
-              <div class="group-title">
-                ${group.name} (${group.code})
-              </div>
-              <div class="group-stats">
-                ${group.total_blocks} blocks • $${group.total_forecasted_revenue.toLocaleString()} revenue
-              </div>
+              <div><strong>${group.name} (${group.code})</strong></div>
+              <div>${group.total_blocks} blocks • $${group.total_forecasted_revenue.toLocaleString()}</div>
             </div>
             <div class="group-content" id="group-${index}">
-              ${generateAllotmentTable(group.allotment_blocks)}
+              ${generateBlockSummary(group.allotment_blocks)}
+              ${generateBlockDetails(group.allotment_blocks)}
             </div>
           </div>
         `;
@@ -467,42 +283,57 @@
       container.innerHTML = html;
     }
 
-    function generateAllotmentTable(blocks) {
-      if (!blocks || blocks.length === 0) {
-        return '<div class="no-data">No allotment blocks found.</div>';
-      }
-      
+    function generateBlockSummary(blocks) {
       let html = `
-        <table class="allotment-table">
+        <h4><i class="fas fa-list"></i> Block Summary</h4>
+        <table class="table">
           <thead>
             <tr>
               <th>Block Name</th>
-              <th>Block Code</th>
+              <th>Code</th>
               <th>Status</th>
-              <th>Dates</th>
-              <th>Pickup %</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Pickup</th>
               <th>Revenue</th>
+              <th>Forecasted Revenue</th>
             </tr>
           </thead>
           <tbody>
       `;
       
       blocks.forEach(block => {
-        const avgPickup = calculateAveragePickup(block.dates_data);
+        const dates = block.dates_data.map(d => d.date).sort();
+        const startDate = dates[0] || '-';
+        const endDate = dates[dates.length - 1] || '-';
+        
+        let totalConfirmed = 0, totalAllotted = 0, actualRevenue = 0, forecastedRevenue = 0;
+        block.dates_data.forEach(date => {
+          date.room_types.forEach(room => {
+            totalConfirmed += room.block_confirmed || 0;
+            totalAllotted += room.block_allotted || 0;
+            actualRevenue += (room.block_confirmed || 0) * (room.rate || 0);
+            forecastedRevenue += (room.block_allotted || 0) * (room.rate || 0);
+          });
+        });
+        const pickup = totalAllotted > 0 ? Math.round((totalConfirmed / totalAllotted) * 100) : 0;
         
         html += `
           <tr>
-            <td>${block.name}</td>
+            <td><strong>${block.name}</strong></td>
             <td>${block.code || '-'}</td>
             <td>${block.status || '-'}</td>
-            <td>${block.dates_data.length} dates</td>
+            <td>${startDate}</td>
+            <td>${endDate}</td>
             <td>
               <div class="pickup-bar">
-                <div class="pickup-fill" style="width: ${avgPickup}%"></div>
-                <div class="pickup-text">${avgPickup}%</div>
+                <div class="pickup-fill" style="width: ${pickup}%"></div>
+                <div class="pickup-text">${pickup}%</div>
               </div>
+              <div style="font-size: 11px; text-align: center; margin-top: 2px;">${totalConfirmed}/${totalAllotted}</div>
             </td>
-            <td class="currency">$${block.forecasted_revenue.toLocaleString()}</td>
+            <td style="color: #38a169; font-weight: 600;">$${actualRevenue.toLocaleString()}</td>
+            <td style="color: #38a169; font-weight: 600;">$${forecastedRevenue.toLocaleString()}</td>
           </tr>
         `;
       });
@@ -511,46 +342,86 @@
       return html;
     }
 
-    function calculateAveragePickup(datesData) {
-      if (!datesData || datesData.length === 0) return 0;
+    function generateBlockDetails(blocks) {
+      let html = '<h4 style="margin-top: 30px;"><i class="fas fa-calendar-alt"></i> Detailed Room Type Breakdown</h4>';
       
-      let totalPickup = 0;
-      let count = 0;
-      
-      datesData.forEach(date => {
-        date.room_types.forEach(room => {
-          totalPickup += room.pickup_percentage || 0;
-          count++;
+      blocks.forEach(block => {
+        if (!block.dates_data || block.dates_data.length === 0) return;
+        
+        html += `
+          <div class="detail-card">
+            <div class="detail-header">
+              <i class="fas fa-building"></i> 
+              <span style="cursor: pointer; color: #4299e1; text-decoration: underline;" onclick="loadReservations('${block.code}', '${block.name}')">
+                ${block.name} (${block.code || 'No Code'})
+              </span>
+            </div>
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0;">Date</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0;">Room Type</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0; text-align: right;">Rate</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">Allotted</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">Confirmed</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">Remaining</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">Pickup %</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0; text-align: right;">Revenue</th>
+                  <th style="padding: 8px; border: 1px solid #cbd5e0; text-align: right;">Forecasted Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        block.dates_data.forEach(dateInfo => {
+          dateInfo.room_types.forEach(room => {
+            const actualRevenue = (room.block_confirmed || 0) * (room.rate || 0);
+            const forecastedRevenue = (room.block_allotted || 0) * (room.rate || 0);
+            html += `
+              <tr>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-weight: 500;">${dateInfo.date}</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0;">${room.room_type_id}</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: right;">${(room.rate || 0).toFixed(2)}</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: center; font-weight: 600;">${room.block_allotted || 0}</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: center; font-weight: 600; color: #38a169;">${room.block_confirmed || 0}</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: center; font-weight: 600; color: #e53e3e;">${room.block_remaining || 0}</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: center;">${room.pickup_percentage || 0}%</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: right; color: #38a169; font-weight: 600;">${actualRevenue.toFixed(2)}</td>
+                <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: right; color: #38a169; font-weight: 600;">${forecastedRevenue.toFixed(2)}</td>
+              </tr>
+            `;
+          });
         });
+        
+        html += `
+              </tbody>
+            </table>
+          </div>
+        `;
       });
       
-      return count > 0 ? Math.round(totalPickup / count) : 0;
+      return html;
     }
 
     function toggleGroup(index) {
-      const content = document.getElementById(`group-${index}`);
-      content.classList.toggle('active');
+      document.getElementById(`group-${index}`).classList.toggle('show');
     }
 
     function clearReport() {
-      hideResults();
-      hideError();
-      document.getElementById('summary').style.display = 'none';
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('summary').classList.remove('show');
       document.getElementById('exportBtn').style.display = 'none';
+      document.getElementById('groupFilter').value = '';
+      document.getElementById('blockFilter').value = '';
+      ['statusLead', 'statusTentative', 'statusDefinite'].forEach(id => {
+        document.getElementById(id).checked = true;
+      });
+      document.getElementById('statusCancelled').checked = false;
+      updateStatusText();
     }
 
     function exportReport() {
-      // Simple CSV export functionality
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-      
-      if (!startDate || !endDate) {
-        alert('Please generate a report first.');
-        return;
-      }
-      
-      // You can implement CSV export here
-      alert('Export functionality can be implemented based on your needs.');
+      alert('Export functionality can be implemented.');
     }
 
     function showLoading() {
@@ -564,22 +435,274 @@
     function showError(message) {
       const errorDiv = document.getElementById('error');
       errorDiv.textContent = message;
-      errorDiv.style.display = 'block';
+      errorDiv.classList.add('show');
     }
 
     function hideError() {
-      document.getElementById('error').style.display = 'none';
+      document.getElementById('error').classList.remove('show');
     }
 
-    function hideResults() {
-      document.getElementById('results').innerHTML = '';
+    function loadReservations(blockCode, blockName) {
+      const reservationsDiv = document.getElementById(`reservations-${blockCode}`);
+      
+      // Show loading state
+      reservationsDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #718096;"><i class="fas fa-spinner fa-spin"></i> Loading reservations...</div>';
+      reservationsDiv.style.display = 'block';
+      
+      // Fetch reservations for this allotment block
+      fetch(`/api/reservations?allotmentBlockCode=${blockCode}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data && data.data.length > 0) {
+            reservationsDiv.innerHTML = generateReservationsTable(data.data, blockName);
+          } else {
+            reservationsDiv.innerHTML = `
+              <div style="text-align: center; padding: 20px; color: #718096; font-style: italic;">
+                <i class="fas fa-info-circle"></i> No reservations found for allotment block: ${blockName}
+              </div>
+            `;
+          }
+        })
+        .catch(error => {
+          reservationsDiv.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #e53e3e;">
+              <i class="fas fa-exclamation-triangle"></i> Error loading reservations: ${error.message}
+            </div>
+          `;
+        });
     }
 
-    // Auto-generate report on page load if dates are set
-    window.addEventListener('load', function() {
-      // Uncomment this if you want to auto-generate on load
-      // generateReport();
+    function generateReservationsTable(reservations, blockName) {
+      let html = `
+        <div style="background: #e3f2fd; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+          <h5 style="margin: 0; color: #1976d2;">
+            <i class="fas fa-bed"></i> Reservations for ${blockName} (${reservations.length} found)
+          </h5>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: white;">
+          <thead>
+            <tr style="background: #f1f5f9;">
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: left;">Reservation ID</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: left;">Guest Name</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: center;">Check-in</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: center;">Check-out</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: center;">Nights</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: center;">Adults</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: center;">Children</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: left;">Room Type</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: center;">Room Number</th>
+              <th style="padding: 10px 8px; border: 1px solid #cbd5e0; text-align: center;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      reservations.forEach(reservation => {
+        // Calculate nights
+        const checkIn = new Date(reservation.checkIn || reservation.dateCheckIn);
+        const checkOut = new Date(reservation.checkOut || reservation.dateCheckOut);
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        
+        // Get guest name
+        const guestName = getGuestName(reservation);
+        
+        // Get room information
+        const roomType = reservation.roomTypeName || reservation.roomType || '-';
+        const roomNumber = reservation.roomNumber || reservation.room || '-';
+        
+        // Get status with color coding
+        const status = reservation.status || 'Unknown';
+        const statusColor = getStatusColor(status);
+        
+        html += `
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 500;">${reservation.reservationID || reservation.id || '-'}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 500;">${guestName}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${formatDate(reservation.checkIn || reservation.dateCheckIn)}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${formatDate(reservation.checkOut || reservation.dateCheckOut)}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; font-weight: 600;">${nights > 0 ? nights : '-'}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${reservation.adults || reservation.guestCount || '-'}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${reservation.children || '0'}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${roomType}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; font-weight: 600;">${roomNumber}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">
+              <span style="padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; color: white; background: ${statusColor};">
+                ${status}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += `
+          </tbody>
+        </table>
+        <div style="text-align: center; margin-top: 10px;">
+          <button onclick="document.getElementById('reservations-${reservations[0]?.allotmentBlockCode}').style.display='none'" 
+                  style="padding: 6px 12px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+            <i class="fas fa-times"></i> Close Reservations
+          </button>
+        </div>
+      `;
+      
+      return html;
+    }
+
+    function getGuestName(reservation) {
+      // Try different possible guest name fields
+      if (reservation.guestName) return reservation.guestName;
+      if (reservation.primaryGuest) {
+        const guest = reservation.primaryGuest;
+        return `${guest.firstName || ''} ${guest.lastName || ''}`.trim() || 'Guest';
+      }
+      if (reservation.firstName && reservation.lastName) {
+        return `${reservation.firstName} ${reservation.lastName}`;
+      }
+      if (reservation.guests && reservation.guests.length > 0) {
+        const guest = reservation.guests[0];
+        return `${guest.firstName || ''} ${guest.lastName || ''}`.trim() || 'Guest';
+      }
+      return 'Guest Name Not Available';
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '-';
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit' 
+        });
+      } catch (e) {
+        return dateString;
+      }
+    }
+
+    // Initialize
+    updateStatusText();
+
+    function loadReservations(blockCode, blockName) {
+  console.log('Loading reservations for:', blockCode, blockName);
+  
+  // Show modal
+  document.getElementById('modalTitle').innerHTML = `<i class="fas fa-bed"></i> Reservations for ${blockName}`;
+  document.getElementById('modalBody').innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+  document.getElementById('reservationsModal').style.display = 'block';
+  
+  // Fetch reservations
+  fetch(`/api/reservations?allotmentBlockCode=${blockCode}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.data && data.data.length > 0) {
+        document.getElementById('modalBody').innerHTML = generateReservationsTable(data.data, blockName);
+      } else {
+        document.getElementById('modalBody').innerHTML = `
+          <div style="text-align: center; padding: 50px; color: #718096;">
+            <i class="fas fa-info-circle"></i><br><br>
+            No reservations found for: <strong>${blockName}</strong>
+          </div>
+        `;
+      }
+    })
+    .catch(error => {
+      document.getElementById('modalBody').innerHTML = `
+        <div style="text-align: center; padding: 50px; color: #e53e3e;">
+          <i class="fas fa-exclamation-triangle"></i><br><br>
+          Error: ${error.message}
+        </div>
+      `;
     });
+}
+
+function closeReservationsModal() {
+  document.getElementById('reservationsModal').style.display = 'none';
+}
+
+function generateReservationsTable(reservations, blockName) {
+  let html = `
+    <h4 style="color: #1976d2; margin-bottom: 20px;">
+      <i class="fas fa-list"></i> ${reservations.length} Reservations for ${blockName}
+    </h4>
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+      <thead>
+        <tr style="background: #f5f5f5;">
+          <th style="padding: 12px; border: 1px solid #ddd;">Reservation ID</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Guest Name</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Check-in</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Check-out</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Nights</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Adults</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Children</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Room Type</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Room Number</th>
+          <th style="padding: 12px; border: 1px solid #ddd;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  reservations.forEach(reservation => {
+    const checkIn = new Date(reservation.checkIn || reservation.dateCheckIn);
+    const checkOut = new Date(reservation.checkOut || reservation.dateCheckOut);
+    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+    
+    const guestName = reservation.guestName || 
+                     (reservation.firstName && reservation.lastName ? `${reservation.firstName} ${reservation.lastName}` : 'Guest');
+    
+    html += `
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd;">${reservation.reservationID || reservation.id || '-'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; font-weight: 500;">${guestName}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${formatDate(reservation.checkIn || reservation.dateCheckIn)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${formatDate(reservation.checkOut || reservation.dateCheckOut)}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: 600;">${nights > 0 ? nights : '-'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${reservation.adults || reservation.guestCount || '-'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${reservation.children || '0'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${reservation.roomTypeName || reservation.roomType || '-'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${reservation.roomNumber || reservation.room || '-'}</td>
+        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+          <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; color: white; background: #4299e1;">
+            ${reservation.status || 'Unknown'}
+          </span>
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += '</tbody></table>';
+  return html;
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US');
+  } catch (e) {
+    return dateString;
+  }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('reservationsModal');
+  if (event.target == modal) {
+    modal.style.display = 'none';
+  }
+}
   </script>
+
+  <div id="reservationsModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6);">
+    <div style="background-color: white; margin: 3% auto; padding: 0; border-radius: 10px; width: 95%; max-width: 1400px; max-height: 90vh; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+      <div style="background: #2d3748; color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 id="modalTitle" style="margin: 0; font-size: 20px;"><i class="fas fa-bed"></i> Reservations</h3>
+        <span onclick="closeReservationsModal()" style="color: white; font-size: 32px; font-weight: bold; cursor: pointer; line-height: 1;">&times;</span>
+      </div>
+      <div id="modalBody" style="padding: 25px; max-height: 75vh; overflow-y: auto;">
+        <!-- Content loads here -->
+      </div>
+    </div>
+  </div>
 </body>
 </html>
