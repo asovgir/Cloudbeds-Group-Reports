@@ -42,6 +42,9 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// Store report data globally for export
+let currentReportData = null;
+
 // Main report generation
 function generateReport() {
   const startDate = document.getElementById('startDate').value;
@@ -60,6 +63,7 @@ function generateReport() {
     .then(data => {
       hideLoading();
       if (data.success) {
+        currentReportData = data.data; // Store for export
         displayReport(data.data);
       } else {
         showError('Error: ' + data.error);
@@ -95,11 +99,12 @@ function displayGroups(groups) {
   
   let html = '';
   groups.forEach((group, index) => {
+    const displayName = group.display_name || `${group.name} (${group.code})`;
     html += `
       <div class="group-card">
         <div class="group-header" onclick="toggleGroup(${index})">
-          <div><strong>${group.name} (${group.code})</strong></div>
-          <div>${group.total_blocks} blocks • $${group.total_forecasted_revenue.toLocaleString()}</div>
+          <div><strong>${displayName}</strong></div>
+          <div>${group.total_blocks} blocks • ${group.total_forecasted_revenue.toLocaleString()}</div>
         </div>
         <div class="group-content" id="group-${index}">
           ${generateBlockSummary(group.allotment_blocks)}
@@ -161,8 +166,8 @@ function generateBlockSummary(blocks) {
           </div>
           <div style="font-size: 11px; text-align: center; margin-top: 2px;">${totalConfirmed}/${totalAllotted}</div>
         </td>
-        <td style="color: #38a169; font-weight: 600;">$${actualRevenue.toLocaleString()}</td>
-        <td style="color: #38a169; font-weight: 600;">$${forecastedRevenue.toLocaleString()}</td>
+        <td style="color: #38a169; font-weight: 600;">${actualRevenue.toLocaleString()}</td>
+        <td style="color: #38a169; font-weight: 600;">${forecastedRevenue.toLocaleString()}</td>
       </tr>
     `;
   });
@@ -184,6 +189,9 @@ function generateBlockDetails(blocks) {
           <span style="cursor: pointer; color: #4299e1; text-decoration: underline;" onclick="loadReservations('${block.code}', '${block.name}')">
             ${block.name} (${block.code || 'No Code'})
           </span>
+          <small style="margin-left: 10px; color: #718096; font-weight: normal;">
+            <i class="fas fa-bed"></i> Click to view reservations
+          </small>
         </div>
         <table class="detail-table">
           <thead>
@@ -233,7 +241,17 @@ function generateBlockDetails(blocks) {
 }
 
 function toggleGroup(index) {
-  document.getElementById(`group-${index}`).classList.toggle('show');
+  const content = document.getElementById(`group-${index}`);
+  const chevron = document.querySelector(`[onclick="toggleGroup(${index})"] .fa-chevron-down`);
+  
+  content.classList.toggle('show');
+  
+  // Rotate chevron icon
+  if (content.classList.contains('show')) {
+    chevron.style.transform = 'rotate(180deg)';
+  } else {
+    chevron.style.transform = 'rotate(0deg)';
+  }
 }
 
 function clearReport() {
@@ -247,32 +265,321 @@ function clearReport() {
   });
   document.getElementById('statusCancelled').checked = false;
   updateStatusText();
+  currentReportData = null; // Clear stored data
 }
 
+// ENHANCED: Export functionality with reservations
 function exportReport() {
-  alert('Export functionality can be implemented.');
+  if (!currentReportData) {
+    showError('No report data available for export. Please generate a report first.');
+    return;
+  }
+  
+  // Show export options modal
+  showExportModal();
 }
 
-// Utility functions
-function showLoading() {
-  document.getElementById('loading').style.display = 'block';
+function showExportModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.id = 'exportModal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-download"></i> Export Report</h3>
+        <span class="close" onclick="closeExportModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 20px;">
+          <h4>Choose Export Format:</h4>
+          <div style="display: grid; gap: 10px; margin-top: 15px;">
+            <button class="btn btn-primary" onclick="exportToCSV()" style="width: 100%; justify-content: center;">
+              <i class="fas fa-file-csv"></i> Export to CSV
+            </button>
+            <button class="btn btn-secondary" onclick="exportToJSON()" style="width: 100%; justify-content: center;">
+              <i class="fas fa-file-code"></i> Export to JSON
+            </button>
+            <button class="btn btn-success" onclick="exportToPDF()" style="width: 100%; justify-content: center;">
+              <i class="fas fa-file-pdf"></i> Export to PDF (Print)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  modal.style.display = 'block';
 }
 
-function hideLoading() {
-  document.getElementById('loading').style.display = 'none';
+function closeExportModal() {
+  const modal = document.getElementById('exportModal');
+  if (modal) {
+    modal.remove();
+  }
 }
 
-function showError(message) {
-  const errorDiv = document.getElementById('error');
-  errorDiv.textContent = message;
-  errorDiv.classList.add('show');
+function exportToCSV() {
+  if (!currentReportData) return;
+  
+  showError('📊 Preparing comprehensive export with reservations... This may take a moment.');
+  
+  // We'll export multiple sheets worth of data in one CSV
+  const sections = [];
+  
+  // 1. Summary Section
+  sections.push('=== REPORT SUMMARY ===');
+  sections.push(`Date Range,${currentReportData.date_range.start_date},${currentReportData.date_range.end_date}`);
+  sections.push(`Total Groups,${currentReportData.summary.total_groups}`);
+  sections.push(`Total Allotment Blocks,${currentReportData.summary.total_allotment_blocks}`);
+  sections.push(`Total Forecasted Revenue,${currentReportData.summary.total_forecasted_revenue.toLocaleString()}`);
+  sections.push('');
+  
+  // 2. Groups Overview
+  sections.push('=== GROUPS OVERVIEW ===');
+  sections.push('Group Name,Group Code,Total Blocks,Total Forecasted Revenue');
+  currentReportData.groups.forEach(group => {
+    sections.push(`"${group.name}","${group.code}",${group.total_blocks},${group.total_forecasted_revenue.toLocaleString()}`);
+  });
+  sections.push('');
+  
+  // 3. Detailed Allotment Data
+  sections.push('=== ALLOTMENT BLOCKS DETAIL ===');
+  sections.push('Group Name,Group Code,Block Name,Block Code,Block Status,Date,Room Type,Rate,Allotted,Confirmed,Remaining,Pickup %,Actual Revenue,Forecasted Revenue');
+  
+  currentReportData.groups.forEach(group => {
+    group.allotment_blocks.forEach(block => {
+      block.dates_data.forEach(dateInfo => {
+        dateInfo.room_types.forEach(room => {
+          const actualRevenue = (room.block_confirmed || 0) * (room.rate || 0);
+          const forecastedRevenue = (room.block_allotted || 0) * (room.rate || 0);
+          const displayName = group.display_name || `${group.name} (${group.code})`;
+          
+          sections.push([
+            `"${displayName}"`,
+            `"${group.code}"`,
+            `"${block.name}"`,
+            `"${block.code || ''}"`,
+            `"${block.status || ''}"`,
+            dateInfo.date,
+            `"${room.room_type_id}"`,
+            room.rate || 0,
+            room.block_allotted || 0,
+            room.block_confirmed || 0,
+            room.block_remaining || 0,
+            room.pickup_percentage || 0,
+            actualRevenue.toFixed(2),
+            forecastedRevenue.toFixed(2)
+          ].join(','));
+        });
+      });
+    });
+  });
+  
+  // 4. Fetch and include reservations for each block
+  fetchAllReservationsForExport(currentReportData.groups)
+    .then(reservationsData => {
+      if (reservationsData && reservationsData.length > 0) {
+        sections.push('');
+        sections.push('=== RESERVATIONS DETAIL ===');
+        sections.push('Group Name,Group Code,Block Name,Block Code,Reservation ID,Guest Name,Check-in,Check-out,Nights,Adults,Children,Room Type,Room Number,Status,Total Amount');
+        
+        reservationsData.forEach(resData => {
+          resData.reservations.forEach(reservation => {
+            const checkInDate = getDateValue(reservation.startDate);
+            const checkOutDate = getDateValue(reservation.endDate);
+            const nights = calculateNights(checkInDate, checkOutDate);
+            const guestName = getGuestName(reservation);
+            const roomType = getRoomType(reservation);
+            const roomNumber = getRoomNumber(reservation);
+            const totalAmount = reservation.total || reservation.balance || 0;
+            
+            sections.push([
+              `"${resData.groupName}"`,
+              `"${resData.groupCode}"`,
+              `"${resData.blockName}"`,
+              `"${resData.blockCode}"`,
+              `"${reservation.reservationID || ''}"`,
+              `"${guestName}"`,
+              formatDate(checkInDate),
+              formatDate(checkOutDate),
+              nights,
+              reservation.adults || 0,
+              reservation.children || 0,
+              `"${roomType}"`,
+              `"${roomNumber}"`,
+              `"${reservation.status || ''}"`,
+              totalAmount
+            ].join(','));
+          });
+        });
+      }
+      
+      // Download the complete CSV
+      const csvContent = sections.join('\n');
+      downloadFile(csvContent, 'cloudbeds-complete-allotment-report.csv', 'text/csv');
+      hideError();
+      closeExportModal();
+    })
+    .catch(error => {
+      console.error('Error fetching reservations for export:', error);
+      // Still export without reservations
+      const csvContent = sections.join('\n');
+      downloadFile(csvContent, 'cloudbeds-allotment-report-basic.csv', 'text/csv');
+      showError('Export completed, but reservations data could not be included due to: ' + error.message);
+      closeExportModal();
+    });
 }
 
-function hideError() {
-  document.getElementById('error').classList.remove('show');
+function exportToJSON() {
+  if (!currentReportData) return;
+  
+  const jsonContent = JSON.stringify(currentReportData, null, 2);
+  downloadFile(jsonContent, 'cloudbeds-allotment-report.json', 'application/json');
+  closeExportModal();
 }
 
-// FIXED: Enhanced loadReservations function
+function exportToPDF() {
+  closeExportModal();
+  
+  // Create a print-friendly version
+  const printWindow = window.open('', '_blank');
+  const reportHtml = generatePrintableReport();
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Cloudbeds Allotment Report</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .summary { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .group-header { background: #2d3748; color: white; padding: 10px; font-weight: bold; }
+        .currency { color: #38a169; font-weight: bold; }
+        @media print {
+          body { margin: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      ${reportHtml}
+      <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #4299e1; color: white; border: none; border-radius: 5px; cursor: pointer;">Print Report</button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: #718096; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Close</button>
+      </div>
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+}
+
+function generatePrintableReport() {
+  if (!currentReportData) return '';
+  
+  let html = `
+    <h1>Cloudbeds Allotment Report</h1>
+    <div class="summary">
+      <h3>Summary</h3>
+      <p><strong>Date Range:</strong> ${currentReportData.date_range.start_date} to ${currentReportData.date_range.end_date}</p>
+      <p><strong>Total Groups:</strong> ${currentReportData.summary.total_groups}</p>
+      <p><strong>Total Blocks:</strong> ${currentReportData.summary.total_allotment_blocks}</p>
+      <p><strong>Total Forecasted Revenue:</strong> <span class="currency">$${currentReportData.summary.total_forecasted_revenue.toLocaleString()}</span></p>
+    </div>
+  `;
+  
+  currentReportData.groups.forEach(group => {
+    html += `
+      <div class="group-header">
+        ${group.name} (${group.code}) - ${group.total_blocks} blocks • $${group.total_forecasted_revenue.toLocaleString()}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Block</th>
+            <th>Date</th>
+            <th>Room Type</th>
+            <th>Rate</th>
+            <th>Allotted</th>
+            <th>Confirmed</th>
+            <th>Pickup %</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    group.allotment_blocks.forEach(block => {
+      block.dates_data.forEach(dateInfo => {
+        dateInfo.room_types.forEach(room => {
+          const actualRevenue = (room.block_confirmed || 0) * (room.rate || 0);
+          html += `
+            <tr>
+              <td>${block.name}</td>
+              <td>${dateInfo.date}</td>
+              <td>${room.room_type_id}</td>
+              <td>$${(room.rate || 0).toFixed(2)}</td>
+              <td>${room.block_allotted || 0}</td>
+              <td>${room.block_confirmed || 0}</td>
+              <td>${room.pickup_percentage || 0}%</td>
+              <td class="currency">$${actualRevenue.toFixed(2)}</td>
+            </tr>
+          `;
+        });
+      });
+    });
+    
+    html += '</tbody></table>';
+  });
+  
+  return html;
+}
+
+// NEW: Function to fetch all reservations for export
+async function fetchAllReservationsForExport(groups) {
+  const allReservations = [];
+  
+  for (const group of groups) {
+    for (const block of group.allotment_blocks) {
+      if (block.code) {
+        try {
+          const response = await fetch(`/api/reservations?allotmentBlockCode=${encodeURIComponent(block.code)}`);
+          const data = await response.json();
+          
+          if (data.success && data.data && data.data.length > 0) {
+            allReservations.push({
+              groupName: group.name,
+              groupCode: group.code,
+              blockName: block.name,
+              blockCode: block.code,
+              reservations: data.data
+            });
+          }
+        } catch (error) {
+          console.error(`Error fetching reservations for block ${block.code}:`, error);
+        }
+      }
+    }
+  }
+  
+  return allReservations;
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 function loadReservations(blockCode, blockName) {
   console.log('Loading reservations for block:', blockCode, blockName);
   
@@ -464,10 +771,34 @@ function formatDate(dateObj) {
   }
 }
 
+// Utility functions
+function showLoading() {
+  document.getElementById('loading').style.display = 'block';
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
+
+function showError(message) {
+  const errorDiv = document.getElementById('error');
+  errorDiv.textContent = message;
+  errorDiv.classList.add('show');
+}
+
+function hideError() {
+  document.getElementById('error').classList.remove('show');
+}
+
 // Close modal when clicking outside
 window.addEventListener('click', function(event) {
   const modal = document.getElementById('reservationsModal');
   if (event.target === modal) {
     modal.style.display = 'none';
+  }
+  
+  const exportModal = document.getElementById('exportModal');
+  if (event.target === exportModal) {
+    closeExportModal();
   }
 });

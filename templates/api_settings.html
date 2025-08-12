@@ -6,35 +6,120 @@
         body { font-family: Arial; padding: 20px; background: #667eea; }
         .container { background: white; padding: 40px; border-radius: 20px; max-width: 500px; margin: 0 auto; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #bdc3c7; border-radius: 8px; box-sizing: border-box; }
-        button { padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; }
-        .save { background: #3498db; color: white; }
-        .test { background: #27ae60; color: white; width: 100%; margin-top: 15px; }
+        button { padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+        .save { background: #3498db; color: white; width: 100%; font-size: 16px; }
+        .test { background: #27ae60; color: white; font-size: 13px; padding: 10px 16px; width: auto; min-width: 120px; }
+        .test:disabled { background: #95a5a6; cursor: not-allowed; }
+        .button-row { display: flex; gap: 10px; align-items: center; }
+        .button-row .save { flex: 1; margin: 0; }
+        .button-row .test { margin: 0; white-space: nowrap; }
+        #status { 
+            margin-top: 10px; 
+            padding: 10px; 
+            border-radius: 5px; 
+            display: none; 
+            font-weight: bold;
+        }
+        #status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
+        #status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
+        #status.loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; display: block; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔑 API Settings</h1>
+        {% if first_time %}
+        <p style="background: #e6fffa; padding: 15px; border-radius: 8px; color: #234e52; margin-bottom: 20px;">
+            👋 Welcome! Please enter your Cloudbeds API credentials to get started.
+        </p>
+        {% endif %}
+        
         <form method="post" action="/settings">
             <label>API Key:</label>
-            <input type="password" name="api_key" value="{{ config.get('api_key', '') }}" required>
+            <input type="password" name="api_key" id="api_key" value="{{ config.get('api_key', '') }}" required>
             
             <label>Property ID:</label>
-            <input type="text" name="property_id" value="{{ config.get('property_id', '6000') }}">
+            <input type="text" name="property_id" id="property_id" value="{{ config.get('property_id', '6000') }}">
             
-            <button type="submit" class="save">Save Settings</button>
+            <div class="button-row">
+                <button type="submit" class="save">🚀 Authenticate & Generate Report</button>
+                <button type="button" onclick="testConnection()" class="test" id="testBtn">Validate API Key</button>
+            </div>
         </form>
         
-        <button onclick="testConnection()" class="test">Test Connection</button>
         <div id="status"></div>
     </div>
     
     <script>
         function testConnection() {
-            // Simple test function
-            fetch('/api/test-connection').then(r => r.json()).then(data => {
-                document.getElementById('status').innerHTML = data.success ? '✅ Success' : '❌ ' + data.error;
-            });
+            const apiKey = document.getElementById('api_key').value.trim();
+            const propertyId = document.getElementById('property_id').value.trim();
+            const statusDiv = document.getElementById('status');
+            const testBtn = document.getElementById('testBtn');
+            
+            // Clear previous status
+            statusDiv.className = '';
+            statusDiv.style.display = 'none';
+            
+            // Validation
+            if (!apiKey) {
+                showStatus('error', '❌ Please enter an API key first.');
+                return;
+            }
+            
+            if (!propertyId) {
+                showStatus('error', '❌ Please enter a Property ID.');
+                return;
+            }
+            
+            // Show loading state
+            testBtn.disabled = true;
+            testBtn.textContent = '...';
+            showStatus('loading', '🔄 Testing API connection...');
+            
+            // Test connection with broader date range for better validation
+            const testUrl = `/api/test-connection?api_key=${encodeURIComponent(apiKey)}&property_id=${encodeURIComponent(propertyId)}`;
+            
+            fetch(testUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showStatus('success', `✅ ${data.message || 'Connection successful!'}`);
+                    } else {
+                        showStatus('error', `❌ ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Test connection error:', error);
+                    showStatus('error', `❌ Connection error: ${error.message}`);
+                })
+                .finally(() => {
+                    // Reset button
+                    testBtn.disabled = false;
+                    testBtn.textContent = 'Validate API Key';
+                });
         }
+        
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+        }
+        
+        // Clear status when user types
+        document.getElementById('api_key').addEventListener('input', function() {
+            document.getElementById('status').style.display = 'none';
+        });
+        
+        document.getElementById('property_id').addEventListener('input', function() {
+            document.getElementById('status').style.display = 'none';
+        });
     </script>
 </body>
 </html>

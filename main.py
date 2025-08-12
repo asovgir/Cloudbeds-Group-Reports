@@ -71,7 +71,7 @@ def make_api_call(url, params, credentials):
     }
     
     try:
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers, params=params, timeout=30)
         print(f"🔗 API call to {url} - Status: {response.status_code}")
         
         if response.status_code == 200:
@@ -80,8 +80,19 @@ def make_api_call(url, params, credentials):
             return {'success': False, 'error': "Authentication failed. Please check your API key."}
         elif response.status_code == 403:
             return {'success': False, 'error': "Access forbidden. Please check your API permissions."}
+        elif response.status_code == 429:
+            return {'success': False, 'error': "Rate limit exceeded. Please try again in a few minutes."}
         else:
-            return {'success': False, 'error': f"API Error: {response.status_code} - {response.text}"}
+            try:
+                error_data = response.json()
+                error_msg = error_data.get('message', response.text)
+            except:
+                error_msg = response.text
+            return {'success': False, 'error': f"API Error: {response.status_code} - {error_msg}"}
+    except requests.exceptions.Timeout:
+        return {'success': False, 'error': "Request timed out. Please check your internet connection."}
+    except requests.exceptions.ConnectionError:
+        return {'success': False, 'error': "Connection error. Please check your internet connection."}
     except Exception as e:
         return {'success': False, 'error': f"Connection error: {str(e)}"}
 
@@ -191,10 +202,14 @@ def generate_group_allotment_report(allotment_blocks, start_date, end_date):
         group_name = block.get('groupName') or block.get('groupCode') or "Unknown Group"
         group_code = block.get('groupCode') or block.get('groupName') or "Unknown Code"
         
-        if group_code not in groups:
-            groups[group_code] = {
+        # Create a unique key for grouping
+        group_key = f"{group_name}_{group_code}"
+        
+        if group_key not in groups:
+            groups[group_key] = {
                 'code': group_code,
                 'name': group_name,
+                'display_name': f"{group_name} ({group_code})",  # NEW: Combined display name
                 'allotment_blocks': [],
                 'total_blocks': 0,
                 'total_forecasted_revenue': 0
@@ -202,9 +217,9 @@ def generate_group_allotment_report(allotment_blocks, start_date, end_date):
         
         block_data = process_allotment_block(block)
         
-        groups[group_code]['allotment_blocks'].append(block_data)
-        groups[group_code]['total_blocks'] += 1
-        groups[group_code]['total_forecasted_revenue'] += block_data['forecasted_revenue']
+        groups[group_key]['allotment_blocks'].append(block_data)
+        groups[group_key]['total_blocks'] += 1
+        groups[group_key]['total_forecasted_revenue'] += block_data['forecasted_revenue']
     
     groups_array = sorted(groups.values(), key=lambda x: x['name'])
     
@@ -252,23 +267,89 @@ def save_settings():
 
 @app.route('/api/test-connection')
 def test_connection():
-    """Test API connection"""
-    credentials = get_credentials()
+    """ENHANCED: Test API connection with better error handling"""
+    print("🧪 Testing API connection...")
     
-    if not credentials['api_key']:
-        return jsonify({'success': False, 'error': 'Please configure your API credentials first.'})
+    # Get current form data if available, otherwise use saved config
+    form_api_key = request.args.get('api_key')
+    form_property_id = request.args.get('property_id')
     
-    # Test with a simple API call
+    if form_api_key and form_property_id:
+        # Use form data for testing (before saving)
+        credentials = {
+            'api_key': form_api_key.strip(),
+            'property_id': form_property_id.strip()
+        }
+        print("🔧 Using form data for test")
+    else:
+        # Use saved credentials
+        credentials = get_credentials()
+        print("🔧 Using saved credentials for test")
+    
+    # Validate credentials
+    if not credentials['api_key'] or not credentials['api_key'].strip():
+        return jsonify({
+            'success': False, 
+            'error': 'Please configure your API credentials first.'
+        })
+    
+    if not credentials['property_id'] or not credentials['property_id'].strip():
+        return jsonify({
+            'success': False, 
+            'error': 'Please provide a valid Property ID.'
+        })
+    
+    # Test with a broader date range to get more meaningful results
+    start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+    end_date = (datetime.now() + timedelta(days=60)).strftime('%Y-%m-%d')
+    print(f"🔗 Testing API call with date range: {start_date} to {end_date}")
+    
     result = make_api_call(ALLOTMENT_BLOCKS_URL, {
         'propertyID': credentials['property_id'],
-        'startDate': datetime.now().strftime('%Y-%m-%d'),
-        'endDate': datetime.now().strftime('%Y-%m-%d')
+        'startDate': start_date,
+        'endDate': end_date
     }, credentials)
     
     if result['success']:
-        return jsonify({'success': True, 'message': 'API connection successful!'})
+        # Additional validation - check if response structure is as expected
+        try:
+            response_data = result['data']
+            if isinstance(response_data, dict) and 'data' in response_data:
+                blocks_count = len(response_data.get('data', []))
+                print(f"✅ API test successful - found {blocks_count} allotment blocks")
+                
+                # More informative success message
+                if blocks_count > 0:
+                    message = f'Connection successful! Found {blocks_count} allotment blocks in your property.'
+                else:
+                    message = 'Connection successful! No allotment blocks found in the test period, but API access is working.'
+                
+                return jsonify({
+                    'success': True, 
+                    'message': message,
+                    'details': {
+                        'property_id': credentials['property_id'],
+                        'blocks_found': blocks_count,
+                        'date_range': f'{start_date} to {end_date}'
+                    }
+                })
+            else:
+                return jsonify({
+                    'success': False, 
+                    'error': 'API connection successful but received unexpected response format.'
+                })
+        except Exception as e:
+            print(f"⚠️ API response validation error: {e}")
+            return jsonify({
+                'success': False, 
+                'error': f'API connection successful but response validation failed: {str(e)}'
+            })
     else:
-        return jsonify({'success': False, 'error': result['error']})
+        print(f"❌ API test failed: {result['error']}")
+        return jsonify({
+            'success': False, 
+            'error': result['error']
+        })
 
 @app.route('/api/group-allotment-report')
 def group_allotment_report():

@@ -18,7 +18,7 @@ body {
   padding: 20px; 
 }
 
-/* Header */
+/* Enhanced Header with Navigation */
 .header { 
   background: white; 
   border-radius: 8px; 
@@ -27,7 +27,7 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
   display: flex; 
   justify-content: space-between; 
-  align-items: center; 
+  align-items: flex-start; 
   border-bottom: 3px solid #4299e1; 
 }
 
@@ -35,6 +35,99 @@ body {
   font-size: 28px; 
   font-weight: 600; 
   color: #2d3748; 
+  margin-bottom: 15px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Report Navigation */
+.report-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  padding: 8px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  color: #4a5568;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.nav-btn:hover:not(:disabled) {
+  border-color: #4299e1;
+  color: #4299e1;
+}
+
+.nav-btn.active {
+  background: #4299e1;
+  color: white;
+  border-color: #4299e1;
+}
+
+.nav-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.coming-soon {
+  font-size: 10px;
+  background: #ed8936;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+/* Report Content */
+.report-content {
+  display: none;
+}
+
+.report-content.active {
+  display: block;
+}
+
+.coming-soon-content {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  color: #718096;
+}
+
+.coming-soon-content i {
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.coming-soon-content h2 {
+  color: #2d3748;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.coming-soon-content p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Buttons */
@@ -57,14 +150,26 @@ body {
   color: white; 
 }
 
+.btn-primary:hover {
+  background: #3182ce;
+}
+
 .btn-secondary { 
   background: #e2e8f0; 
   color: #4a5568; 
 }
 
+.btn-secondary:hover {
+  background: #cbd5e0;
+}
+
 .btn-success { 
   background: #48bb78; 
   color: white; 
+}
+
+.btn-success:hover {
+  background: #38a169;
 }
 
 /* Controls Section */
@@ -74,6 +179,15 @@ body {
   padding: 30px; 
   margin-bottom: 20px; 
   box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+}
+
+.controls h3 {
+  margin-bottom: 20px;
+  color: #2d3748;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .form-row { 
@@ -204,6 +318,15 @@ body {
   display: block; 
 }
 
+.summary h3 {
+  margin-bottom: 20px;
+  color: #2d3748;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .summary-stats { 
   display: grid; 
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
@@ -261,6 +384,15 @@ body {
 
 .group-content.show { 
   display: block; 
+}
+
+.group-content h4 {
+  margin-bottom: 15px;
+  color: #2d3748;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Tables */
@@ -327,6 +459,9 @@ body {
   padding: 12px; 
   border-bottom: 1px solid #e2e8f0; 
   font-weight: 600; 
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .detail-table { 
@@ -380,6 +515,9 @@ body {
 .modal-header h3 { 
   margin: 0; 
   font-size: 18px; 
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .modal-body { 
@@ -397,4 +535,66 @@ body {
 
 .close:hover { 
   opacity: 0.7; 
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .report-nav {
+    width: 100%;
+  }
+  
+  .nav-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 12px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .filter-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+  }
+  
+  .modal-content {
+    width: 98%;
+    margin: 2% auto;
+  }
+  
+  .coming-soon-content {
+    padding: 40px 20px;
+  }
+  
+  .coming-soon-content i {
+    font-size: 2.5rem !important;
+  }
+  
+  .coming-soon-content h2 {
+    font-size: 20px;
+  }
 }

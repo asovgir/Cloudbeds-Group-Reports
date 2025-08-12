@@ -1,121 +1,293 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Group Allotment Report</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="static/css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudbeds Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Inline styles to ensure styling works */
+        .report-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .nav-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            color: #4a5568;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .nav-btn.active {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+        .nav-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .coming-soon {
+            font-size: 10px;
+            background: #ed8936;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+        .report-content {
+            display: none;
+        }
+        .report-content.active {
+            display: block;
+        }
+        .coming-soon-content {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            color: #718096;
+        }
+        .coming-soon-content i {
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .coming-soon-content h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1><i class="fas fa-hotel"></i> Group Allotment Report</h1>
-      <div>
-        <button class="btn btn-success" onclick="exportReport()" style="display:none;" id="exportBtn">
-          <i class="fas fa-download"></i> Export CSV
-        </button>
-        <a href="/settings" class="btn btn-secondary">
-          <i class="fas fa-cog"></i> Settings
-        </a>
-      </div>
-    </div>
-
-    <div class="controls">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="startDate">Start Date:</label>
-          <input type="date" id="startDate" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="endDate">End Date:</label>
-          <input type="date" id="endDate" class="form-control">
-        </div>
-        <div>
-          <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-          <button class="btn btn-secondary" onclick="clearReport()">Clear</button>
-        </div>
-      </div>
-
-      <div class="filter-row">
-        <div class="form-group">
-          <label for="groupFilter">Group (Code/Name):</label>
-          <input type="text" id="groupFilter" class="form-control" placeholder="Search group...">
-        </div>
-        <div class="form-group">
-          <label for="blockFilter">Allotment Block (Code/Name):</label>
-          <input type="text" id="blockFilter" class="form-control" placeholder="Search block...">
-        </div>
-        <div class="form-group">
-          <label>Status:</label>
-          <div class="dropdown">
-            <div class="dropdown-toggle" onclick="toggleStatusDropdown()">
-              <span id="statusText">All Selected</span>
-              <span><i class="fas fa-chevron-down"></i></span>
+    <div class="container">
+        <!-- Enhanced Header with Report Navigation -->
+        <div class="header">
+            <div>
+                <h1>Cloudbeds Reports</h1>
+                <div class="report-nav">
+                    <button class="nav-btn active" onclick="switchReport('allotment')">
+                        <i class="fas fa-calendar-check"></i> Group Allotment Report
+                    </button>
+                    <button class="nav-btn" onclick="switchReport('occupancy')" disabled>
+                        <i class="fas fa-chart-line"></i> Occupancy Report
+                        <span class="coming-soon">Coming Soon</span>
+                    </button>
+                    <button class="nav-btn" onclick="switchReport('revenue')" disabled>
+                        <i class="fas fa-dollar-sign"></i> Revenue Report
+                        <span class="coming-soon">Coming Soon</span>
+                    </button>
+                    <button class="nav-btn" onclick="switchReport('guest')" disabled>
+                        <i class="fas fa-users"></i> Guest Analytics
+                        <span class="coming-soon">Coming Soon</span>
+                    </button>
+                </div>
             </div>
-            <div class="dropdown-menu" id="statusDropdown">
-              <div class="dropdown-item" onclick="toggleSelectAll()">
-                <input type="checkbox" id="selectAll" checked> <strong>SELECT ALL</strong>
-              </div>
-              <hr style="margin: 4px 0; border: none; border-top: 1px solid #e2e8f0;">
-              <div class="dropdown-item">
-                <input type="checkbox" id="statusLead" value="Lead" checked onchange="updateStatusText()"> Lead
-              </div>
-              <div class="dropdown-item">
-                <input type="checkbox" id="statusTentative" value="Tentative" checked onchange="updateStatusText()"> Tentative
-              </div>
-              <div class="dropdown-item">
-                <input type="checkbox" id="statusDefinite" value="Definite" checked onchange="updateStatusText()"> Definite
-              </div>
-              <div class="dropdown-item">
-                <input type="checkbox" id="statusCancelled" value="Cancelled" onchange="updateStatusText()"> Cancelled
-              </div>
+            <div class="header-actions">
+                <a href="/settings" class="btn btn-secondary">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
             </div>
-          </div>
         </div>
-      </div>
+
+        <!-- Report Content -->
+        <div id="allotment-report" class="report-content active">
+            <!-- Controls -->
+            <div class="controls">
+                <h3><i class="fas fa-filter"></i> Report Parameters</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date</label>
+                        <input type="date" id="endDate" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <button onclick="generateReport()" class="btn btn-primary" style="max-width: 200px;">
+                            <i class="fas fa-chart-bar"></i> Generate Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="groupFilter">Filter by Group</label>
+                        <input type="text" id="groupFilter" class="form-control" placeholder="Enter group name...">
+                    </div>
+                    <div class="form-group">
+                        <label for="blockFilter">Filter by Block</label>
+                        <input type="text" id="blockFilter" class="form-control" placeholder="Enter block name...">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status Filter</label>
+                        <div class="dropdown">
+                            <div class="dropdown-toggle" onclick="toggleStatusDropdown()">
+                                <span id="statusText">All Selected</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="dropdown-menu" id="statusDropdown">
+                                <div class="dropdown-item">
+                                    <input type="checkbox" id="selectAll" checked onchange="toggleSelectAll()">
+                                    <label for="selectAll">Select All</label>
+                                </div>
+                                <hr>
+                                <div class="dropdown-item">
+                                    <input type="checkbox" id="statusLead" checked onchange="updateStatusText()">
+                                    <label for="statusLead">Lead</label>
+                                </div>
+                                <div class="dropdown-item">
+                                    <input type="checkbox" id="statusTentative" checked onchange="updateStatusText()">
+                                    <label for="statusTentative">Tentative</label>
+                                </div>
+                                <div class="dropdown-item">
+                                    <input type="checkbox" id="statusDefinite" checked onchange="updateStatusText()">
+                                    <label for="statusDefinite">Definite</label>
+                                </div>
+                                <div class="dropdown-item">
+                                    <input type="checkbox" id="statusCancelled" onchange="updateStatusText()">
+                                    <label for="statusCancelled">Cancelled</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button id="exportBtn" onclick="exportReport()" class="btn btn-success" style="display: none;">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div id="error" class="alert alert-danger"></div>
+            <div id="loading" class="loading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i> Loading report data...
+            </div>
+
+            <!-- Summary -->
+            <div id="summary" class="summary">
+                <h3><i class="fas fa-chart-pie"></i> Report Summary</h3>
+                <div class="summary-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalGroups">0</div>
+                        <div class="stat-label">Total Groups</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalBlocks">0</div>
+                        <div class="stat-label">Allotment Blocks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalRevenue">$0</div>
+                        <div class="stat-label">Forecasted Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="dateRange">-</div>
+                        <div class="stat-label">Date Range</div>
+                    </div>
+                </div>
+                
+                <!-- Usage Instructions -->
+                <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 15px; margin-top: 20px; font-size: 14px; color: #6c757d;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-info-circle" style="color: #17a2b8;"></i>
+                        <strong style="color: #495057;">How to navigate this report:</strong>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <i class="fas fa-mouse-pointer" style="color: #28a745; margin-right: 5px;"></i>
+                            <strong>Click group headers</strong> to expand and view allotment blocks
+                        </div>
+                        <div>
+                            <i class="fas fa-external-link-alt" style="color: #007bff; margin-right: 5px;"></i>
+                            <strong>Click block names</strong> to view associated reservations
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="results"></div>
+        </div>
+
+        <!-- Placeholder for future reports -->
+        <div id="occupancy-report" class="report-content">
+            <div class="coming-soon-content">
+                <i class="fas fa-chart-line fa-4x"></i>
+                <h2>Occupancy Report</h2>
+                <p>This report will show detailed occupancy analytics including daily rates, pick-up trends, and forecasting.</p>
+                <p><strong>Coming Soon!</strong></p>
+            </div>
+        </div>
+
+        <div id="revenue-report" class="report-content">
+            <div class="coming-soon-content">
+                <i class="fas fa-dollar-sign fa-4x"></i>
+                <h2>Revenue Report</h2>
+                <p>This report will provide comprehensive revenue analysis with breakdowns by source, room type, and time periods.</p>
+                <p><strong>Coming Soon!</strong></p>
+            </div>
+        </div>
+
+        <div id="guest-report" class="report-content">
+            <div class="coming-soon-content">
+                <i class="fas fa-users fa-4x"></i>
+                <h2>Guest Analytics</h2>
+                <p>This report will analyze guest behavior, preferences, and booking patterns to help optimize your property performance.</p>
+                <p><strong>Coming Soon!</strong></p>
+            </div>
+        </div>
     </div>
 
-    <div id="loading" class="loading" style="display:none;">Loading...</div>
-    <div id="error" class="alert alert-danger"></div>
-
-    <div id="summary" class="summary">
-      <h2><i class="fas fa-chart-bar"></i> Report Summary</h2>
-      <div class="summary-stats">
-        <div class="stat-card">
-          <div class="stat-value" id="totalGroups">-</div>
-          <div class="stat-label">Total Groups</div>
+    <!-- Reservations Modal -->
+    <div id="reservationsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-bed"></i> Reservations</h3>
+                <span class="close" onclick="closeReservationsModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Reservation content will be loaded here -->
+            </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="totalBlocks">-</div>
-          <div class="stat-label">Allotment Blocks</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="totalRevenue">-</div>
-          <div class="stat-label">Forecasted Revenue</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="dateRange">-</div>
-          <div class="stat-label">Date Range</div>
-        </div>
-      </div>
     </div>
 
-    <div id="results"></div>
-  </div>
-
-  <!-- Reservations Modal -->
-  <div id="reservationsModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modalTitle"><i class="fas fa-bed"></i> Reservations</h3>
-        <span class="close" onclick="closeReservationsModal()">&times;</span>
-      </div>
-      <div class="modal-body" id="modalBody">
-        <!-- Reservations content will be loaded here -->
-      </div>
-    </div>
-  </div>
-
-  <script src="static/js/script.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Report navigation functionality
+        function switchReport(reportType) {
+            // Remove active class from all nav buttons and report contents
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.report-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected nav button and report content
+            document.querySelector(`[onclick="switchReport('${reportType}')"]`).classList.add('active');
+            document.getElementById(`${reportType}-report`).classList.add('active');
+            
+            // Update page title
+            const titles = {
+                'allotment': 'Group Allotment Report',
+                'occupancy': 'Occupancy Report',
+                'revenue': 'Revenue Report', 
+                'guest': 'Guest Analytics'
+            };
+            document.title = `${titles[reportType]} - Cloudbeds Reports`;
+        }
+    </script>
 </body>
 </html>
